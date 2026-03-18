@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pandas as pd
-
 from src.features.engineering import FeatureEngine, compute_features_batch
 
 EXPECTED_FEATURES = {

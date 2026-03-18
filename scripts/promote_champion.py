@@ -3,7 +3,8 @@
 
 Usage:
     python scripts/promote_champion.py --experiment-name signal-classification-v1
-    python scripts/promote_champion.py --experiment-name signal-classification-v1 --vertex
+    python scripts/promote_champion.py \
+        --experiment-name signal-classification-v1 --vertex
 """
 
 from __future__ import annotations

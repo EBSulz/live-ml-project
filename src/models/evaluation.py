@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
 import mlflow
 from river import metrics as river_metrics
 

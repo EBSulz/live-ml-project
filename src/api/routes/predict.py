@@ -18,7 +18,6 @@ from src.data_ingestion.base import DataSource
 from src.features.engineering import FeatureEngine
 from src.models.evaluation import LiveEvaluator
 from src.models.online_model import ChampionModel
-from src.validation.data_quality import validate_ohlcv
 
 logger = logging.getLogger(__name__)
 

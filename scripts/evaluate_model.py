@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""CI quality gate – evaluate the champion model and fail if metrics are below threshold.
+"""CI quality gate – evaluate the champion model and fail if below threshold.
 
 Exit code 0 = pass, 1 = fail.
 

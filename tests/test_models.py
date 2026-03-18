@@ -27,7 +27,7 @@ class TestSignalLabeler:
         closes = [100.0, 101.0, 99.0, 100.0, 102.0]
         labels = label_series(closes, threshold=0.5)
         assert len(labels) == 5
-        assert all(l in ("buy", "hold", "sell") for l in labels)
+        assert all(lbl in ("buy", "hold", "sell") for lbl in labels)
         assert labels[-1] == "hold"  # last item has no lookahead
 
 

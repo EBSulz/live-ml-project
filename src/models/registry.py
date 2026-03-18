@@ -153,10 +153,12 @@ def promote_champion_to_vertex(
 
     f1 = run.data.metrics.get("weighted_f1", 0)
     blob_name = f"models/{experiment_name}/{run.info.run_id}/model.pkl"
-    gcs_uri = upload_to_gcs(model_bytes, blob_name)
+    upload_to_gcs(model_bytes, blob_name)
 
+    base = f"gs://{settings.gcs_model_bucket}/models"
+    artifact_uri = f"{base}/{experiment_name}/{run.info.run_id}"
     resource = register_in_vertex_ai(
-        artifact_uri=f"gs://{settings.gcs_model_bucket}/models/{experiment_name}/{run.info.run_id}",
+        artifact_uri=artifact_uri,
         display_name="market-predictor",
         description=f"Champion from {experiment_name}, F1={f1:.4f}",
     )
