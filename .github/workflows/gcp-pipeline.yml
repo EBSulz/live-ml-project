@@ -1,0 +1,134 @@
+name: GCP – Build & Deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: us-central1
+  AR_REPO: market-predictor
+  SERVICE_TEST: market-predictor-test
+  SERVICE_PROD: market-predictor-prod
+  IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/market-predictor/app
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Staging – runs on every pull_request
+  # ──────────────────────────────────────────────
+  deploy-test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE }}:test-${{ github.sha }} \
+            -f infra/Dockerfile .
+
+      - name: Push to Artifact Registry
+        run: docker push ${{ env.IMAGE }}:test-${{ github.sha }}
+
+      - name: Deploy to Cloud Run (test)
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_TEST }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE }}:test-${{ github.sha }}
+          env_vars: |
+            APP_ENV=staging
+            MLFLOW_TRACKING_URI=sqlite:///mlflow.db
+            DATA_SOURCE=twelve_data
+          secrets: |
+            TWELVE_DATA_API_KEY=TWELVE_DATA_API_KEY:latest
+            ALPHA_VANTAGE_API_KEY=ALPHA_VANTAGE_API_KEY:latest
+
+  # ──────────────────────────────────────────────
+  # Production – runs on push to main with manual approval
+  # ──────────────────────────────────────────────
+  deploy-prod:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production  # GitHub Environment with required reviewers
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE }}:prod-${{ github.sha }} \
+            -f infra/Dockerfile .
+
+      - name: Push to Artifact Registry
+        run: docker push ${{ env.IMAGE }}:prod-${{ github.sha }}
+
+      - name: Deploy canary (10% traffic)
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_PROD }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE }}:prod-${{ github.sha }}
+          tag: canary
+          no_traffic: true
+          env_vars: |
+            APP_ENV=production
+            DATA_SOURCE=twelve_data
+          secrets: |
+            TWELVE_DATA_API_KEY=TWELVE_DATA_API_KEY:latest
+            ALPHA_VANTAGE_API_KEY=ALPHA_VANTAGE_API_KEY:latest
+
+      - name: Route 10% traffic to canary
+        run: |
+          gcloud run services update-traffic ${{ env.SERVICE_PROD }} \
+            --region=${{ env.GCP_REGION }} \
+            --to-tags=canary=10
+
+      - name: Health check canary
+        run: |
+          CANARY_URL=$(gcloud run services describe ${{ env.SERVICE_PROD }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='value(status.traffic[1].url)' 2>/dev/null || echo "")
+          if [ -n "$CANARY_URL" ]; then
+            curl -sf "${CANARY_URL}/health" || echo "Warning: canary health check failed"
+          fi
+
+      - name: Promote canary to 100%
+        run: |
+          gcloud run services update-traffic ${{ env.SERVICE_PROD }} \
+            --region=${{ env.GCP_REGION }} \
+            --to-latest

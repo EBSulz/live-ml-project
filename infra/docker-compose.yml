@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    ports:
+      - "8000:8080"
+    environment:
+      - APP_ENV=development
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - DATA_SOURCE=twelve_data
+      - TWELVE_DATA_API_KEY=${TWELVE_DATA_API_KEY:-}
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY:-}
+      - MLFLOW_EXPERIMENT_NAME=signal-classification-v1
+    depends_on:
+      - mlflow
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.0
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow
+
+volumes:
+  mlflow_data:

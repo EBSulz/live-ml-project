@@ -1,0 +1,47 @@
+stages:
+  fetch-data:
+    cmd: >
+      python -c "
+      import asyncio, pandas as pd
+      from src.data_ingestion.factory import get_data_source
+      async def run():
+          src = get_data_source()
+          df = await src.fetch_ohlcv('BTC/USD', '1h', 5000)
+          df.to_parquet('data/ohlcv_raw.parquet', index=False)
+      asyncio.run(run())
+      "
+    outs:
+      - data/ohlcv_raw.parquet
+
+  engineer-features:
+    cmd: >
+      python -c "
+      import pandas as pd
+      from src.features.engineering import compute_features_batch
+      from src.models.signal_labeler import label_series
+      df = pd.read_parquet('data/ohlcv_raw.parquet')
+      feats = compute_features_batch(df)
+      feats['label'] = label_series(df['close'].tolist())
+      feats.to_parquet('data/features.parquet', index=False)
+      "
+    deps:
+      - data/ohlcv_raw.parquet
+      - src/features/engineering.py
+      - src/models/signal_labeler.py
+    outs:
+      - data/features.parquet
+
+  run-experiment:
+    cmd: python scripts/run_experiment.py --experiment-name signal-classification-v1 --symbol BTC/USD --interval 1h --outputsize 5000
+    deps:
+      - data/features.parquet
+      - src/models/model_zoo.py
+      - src/models/experiment.py
+      - scripts/run_experiment.py
+
+  evaluate:
+    cmd: python scripts/evaluate_model.py --experiment-name signal-classification-v1
+    deps:
+      - scripts/evaluate_model.py
+      - src/models/evaluation.py
+      - src/models/online_model.py
