@@ -52,9 +52,7 @@ def check_feature_drift(
     dict with ``drifted`` (bool), ``details`` (per-feature PSI), ``drifted_features``.
     """
     if feature_columns is None:
-        feature_columns = list(
-            reference_df.select_dtypes(include=[np.number]).columns
-        )
+        feature_columns = list(reference_df.select_dtypes(include=[np.number]).columns)
 
     details: dict[str, float] = {}
     drifted_features: list[str] = []

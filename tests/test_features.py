@@ -6,7 +6,6 @@ import pandas as pd
 
 from src.features.engineering import FeatureEngine, compute_features_batch
 
-
 EXPECTED_FEATURES = {
     "price_change_pct_1",
     "price_change_pct_5",
@@ -58,9 +57,7 @@ class TestBatchFeatures:
         feat_df = compute_features_batch(sample_ohlcv_df)
         assert len(feat_df) == len(sample_ohlcv_df)
         assert "timestamp" in feat_df.columns
-        assert EXPECTED_FEATURES.issubset(
-            set(feat_df.columns) - {"timestamp"}
-        )
+        assert EXPECTED_FEATURES.issubset(set(feat_df.columns) - {"timestamp"})
 
     def test_batch_no_nans_after_warmup(self, sample_ohlcv_df):
         feat_df = compute_features_batch(sample_ohlcv_df)

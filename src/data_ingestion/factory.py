@@ -21,7 +21,5 @@ def get_data_source(source_name: str | None = None) -> DataSource:
     cls = _REGISTRY.get(source_name)
     if cls is None:
         available = ", ".join(_REGISTRY)
-        raise ValueError(
-            f"Unknown data source '{source_name}'. Available: {available}"
-        )
+        raise ValueError(f"Unknown data source '{source_name}'. Available: {available}")
     return cls()

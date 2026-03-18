@@ -35,9 +35,7 @@ class ChampionModel:
     # --- Factory loaders ---
 
     @classmethod
-    def from_mlflow(
-        cls, experiment_name: str | None = None
-    ) -> "ChampionModel":
+    def from_mlflow(cls, experiment_name: str | None = None) -> "ChampionModel":
         """Load the champion run from the MLflow tracking server."""
         settings = get_settings()
         mlflow.set_tracking_uri(settings.mlflow_tracking_uri)

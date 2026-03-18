@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-
 # ---------------------------------------------------------------------------
 # Streaming (one-bar-at-a-time) feature engine
 # ---------------------------------------------------------------------------
@@ -79,9 +78,7 @@ class FeatureEngine:
 
         if len(self._closes) >= 6:
             c5 = self._closes[-6]
-            features["price_change_pct_5"] = (
-                (close - c5) / c5 * 100 if c5 != 0 else 0.0
-            )
+            features["price_change_pct_5"] = (close - c5) / c5 * 100 if c5 != 0 else 0.0
         else:
             features["price_change_pct_5"] = 0.0
 
@@ -103,12 +100,8 @@ class FeatureEngine:
             features["rsi"] = 50.0
 
         # MACD
-        self._ema_fast_val = self._ema_step(
-            self._ema_fast_val, close, self.macd_fast
-        )
-        self._ema_slow_val = self._ema_step(
-            self._ema_slow_val, close, self.macd_slow
-        )
+        self._ema_fast_val = self._ema_step(self._ema_fast_val, close, self.macd_fast)
+        self._ema_slow_val = self._ema_step(self._ema_slow_val, close, self.macd_slow)
         macd_line = (self._ema_fast_val or 0) - (self._ema_slow_val or 0)
         self._ema_signal_val = self._ema_step(
             self._ema_signal_val, macd_line, self.macd_signal
@@ -131,15 +124,9 @@ class FeatureEngine:
             features["bb_position"] = 0.5
 
         # EMA crossover
-        self._ema_short_val = self._ema_step(
-            self._ema_short_val, close, self.ema_short
-        )
-        self._ema_long_val = self._ema_step(
-            self._ema_long_val, close, self.ema_long
-        )
-        features["ema_cross"] = (self._ema_short_val or 0) - (
-            self._ema_long_val or 0
-        )
+        self._ema_short_val = self._ema_step(self._ema_short_val, close, self.ema_short)
+        self._ema_long_val = self._ema_step(self._ema_long_val, close, self.ema_long)
+        features["ema_cross"] = (self._ema_short_val or 0) - (self._ema_long_val or 0)
 
         # Volume ratio
         if len(self._volumes) >= self.vol_period:
@@ -149,9 +136,7 @@ class FeatureEngine:
             features["volume_ratio"] = 1.0
 
         # High-low spread (volatility proxy)
-        features["hl_spread"] = (
-            ((high - low) / close * 100) if close != 0 else 0.0
-        )
+        features["hl_spread"] = ((high - low) / close * 100) if close != 0 else 0.0
 
         self._prev_close = close
         return features

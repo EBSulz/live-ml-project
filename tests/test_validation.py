@@ -50,7 +50,9 @@ class TestDataQuality:
 
 class TestDataDrift:
     def test_no_drift_identical(self):
-        df = pd.DataFrame({"feat_a": np.random.randn(100), "feat_b": np.random.randn(100)})
+        df = pd.DataFrame(
+            {"feat_a": np.random.randn(100), "feat_b": np.random.randn(100)}
+        )
         result = check_feature_drift(df, df)
         assert result["drifted"] is False
 

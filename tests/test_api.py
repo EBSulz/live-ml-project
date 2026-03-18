@@ -34,9 +34,7 @@ async def test_metrics_endpoint(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_predict_endpoint(client: AsyncClient):
-    resp = await client.post(
-        "/predict", json={"symbol": "BTC/USD", "interval": "1h"}
-    )
+    resp = await client.post("/predict", json={"symbol": "BTC/USD", "interval": "1h"})
     assert resp.status_code == 200
     data = resp.json()
     assert data["symbol"] == "BTC/USD"
@@ -48,15 +46,11 @@ async def test_predict_endpoint(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_predict_invalid_symbol(client: AsyncClient):
-    resp = await client.post(
-        "/predict", json={"symbol": "invalid!", "interval": "1h"}
-    )
+    resp = await client.post("/predict", json={"symbol": "invalid!", "interval": "1h"})
     assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_predict_invalid_interval(client: AsyncClient):
-    resp = await client.post(
-        "/predict", json={"symbol": "BTC/USD", "interval": "bad"}
-    )
+    resp = await client.post("/predict", json={"symbol": "BTC/USD", "interval": "bad"})
     assert resp.status_code == 422

@@ -41,9 +41,7 @@ def setup_logging() -> None:
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Log every request with latency and status code."""
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start = time.perf_counter()
         response = await call_next(request)
         elapsed_ms = (time.perf_counter() - start) * 1000

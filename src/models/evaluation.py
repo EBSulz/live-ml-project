@@ -62,9 +62,7 @@ class LiveEvaluator:
     ) -> None:
         settings = get_settings()
         self.log_interval = log_interval or settings.mlflow_log_interval
-        self._experiment_name = (
-            experiment_name or settings.mlflow_live_experiment_name
-        )
+        self._experiment_name = experiment_name or settings.mlflow_live_experiment_name
         self._evaluator = PrequentialEvaluator()
         self._run_id: str | None = None
 
@@ -91,9 +89,7 @@ class LiveEvaluator:
         try:
             self._ensure_run()
             for name, value in current.items():
-                mlflow.log_metric(
-                    name, value, step=self._evaluator.step
-                )
+                mlflow.log_metric(name, value, step=self._evaluator.step)
         except Exception:
             logger.exception("Failed to log metrics to MLflow")
 

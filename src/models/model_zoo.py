@@ -43,9 +43,7 @@ def _make_arf(**kw: Any) -> compose.Pipeline:
 def _make_adwin_bagging(**kw: Any) -> compose.Pipeline:
     return compose.Pipeline(
         preprocessing.StandardScaler(),
-        ensemble.ADWINBaggingClassifier(
-            model=tree.HoeffdingTreeClassifier(), **kw
-        ),
+        ensemble.ADWINBaggingClassifier(model=tree.HoeffdingTreeClassifier(), **kw),
     )
 
 
@@ -57,9 +55,7 @@ def _make_logistic_regression(**kw: Any) -> compose.Pipeline:
 
 
 def _make_gaussian_nb(**kw: Any) -> compose.Pipeline:
-    return compose.Pipeline(
-        preprocessing.StandardScaler(), naive_bayes.GaussianNB()
-    )
+    return compose.Pipeline(preprocessing.StandardScaler(), naive_bayes.GaussianNB())
 
 
 MODEL_ZOO: dict[str, dict[str, Any]] = {

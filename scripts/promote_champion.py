@@ -11,7 +11,9 @@ from __future__ import annotations
 import argparse
 import logging
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-8s %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(levelname)-8s %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 

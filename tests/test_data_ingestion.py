@@ -51,7 +51,12 @@ class TestTwelveDataNormalize:
         ]
         df = TwelveDataSource._normalize(raw)
         assert list(df.columns) == [
-            "timestamp", "open", "high", "low", "close", "volume"
+            "timestamp",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
         ]
         assert len(df) == 2
         assert df.iloc[0]["timestamp"] < df.iloc[1]["timestamp"]
