@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import os
-
 import mlflow
+import pytest
 
+from src.config.settings import get_settings
 from src.models.experiment import run_experiment
 from src.models.model_zoo import expand_grid
 
@@ -36,11 +36,20 @@ def _make_data_stream(n: int = 200) -> list[tuple[dict, str]]:
     return stream
 
 
+@pytest.fixture(autouse=True)
+def _reset_settings_cache():
+    """Clear the lru_cache on get_settings so each test gets fresh config."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
 class TestRunExperiment:
-    def test_run_single_model(self, tmp_path):
+    def test_run_single_model(self, tmp_path, monkeypatch):
         """Run experiment with just GaussianNB (fast, no hyperparams)."""
         db_path = str(tmp_path / "mlflow.db")
-        os.environ["MLFLOW_TRACKING_URI"] = f"sqlite:///{db_path}"
+        tracking_uri = f"sqlite:///{db_path}"
+        monkeypatch.setenv("MLFLOW_TRACKING_URI", tracking_uri)
 
         mini_zoo = {
             "gaussian_nb": {
@@ -48,7 +57,8 @@ class TestRunExperiment:
                     "river.compose", fromlist=["Pipeline"]
                 ).Pipeline(
                     __import__(
-                        "river.preprocessing", fromlist=["StandardScaler"]
+                        "river.preprocessing",
+                        fromlist=["StandardScaler"],
                     ).StandardScaler(),
                     __import__(
                         "river.naive_bayes", fromlist=["GaussianNB"]
@@ -58,7 +68,7 @@ class TestRunExperiment:
             },
         }
 
-        mlflow.set_tracking_uri(f"sqlite:///{db_path}")
+        mlflow.set_tracking_uri(tracking_uri)
         data = _make_data_stream(100)
         champion_id = run_experiment(
             experiment_name="test-experiment",

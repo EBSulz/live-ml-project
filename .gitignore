@@ -11,7 +11,7 @@ build/
 !.env.example
 
 mlruns/
-mlflow.db
+*.db
 
 /data/*.csv
 /data/*.parquet
